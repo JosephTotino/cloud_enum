@@ -6,6 +6,8 @@ cloud_enum by initstring (github.com/initstring)
 Multi-cloud OSINT tool designed to enumerate storage and services in AWS,
 Azure, and GCP.
 
+Modified to show percentage-based progress instead of individual entries.
+
 Enjoy!
 """
 
@@ -13,10 +15,18 @@ import os
 import sys
 import argparse
 import re
+import threading
 from enum_tools import aws_checks
 from enum_tools import azure_checks
 from enum_tools import gcp_checks
 from enum_tools import utils
+
+# Add global progress tracking variables
+CURRENT_COUNT = 0
+TOTAL_COUNT = 0
+VALID_COUNT = 0
+ERROR_COUNT = 0
+PROGRESS_LOCK = threading.Lock()
 
 BANNER = '''
 ##########################
@@ -222,6 +232,7 @@ def build_names(base_list, mutations):
 
     return names
 
+
 def read_nameservers(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -236,10 +247,32 @@ def read_nameservers(file_path):
         print(e)
         exit(1)
 
+
+def update_progress(current, total, valid=0, error=0):
+    """
+    Update the progress counters and display percentage-based progress
+    """
+    global CURRENT_COUNT, TOTAL_COUNT, VALID_COUNT, ERROR_COUNT
+
+    with PROGRESS_LOCK:
+        CURRENT_COUNT = current
+        TOTAL_COUNT = total
+        VALID_COUNT = valid
+        ERROR_COUNT = error
+
+        progress_percentage = (CURRENT_COUNT / TOTAL_COUNT) * 100
+        
+        # Only update display every 5% or if it's the last item
+        if progress_percentage % 5 < (1 / TOTAL_COUNT * 100) or CURRENT_COUNT == TOTAL_COUNT:
+            print(f'\r        Progress: {progress_percentage:.1f}% ({CURRENT_COUNT}/{TOTAL_COUNT}), Valid: {VALID_COUNT}, Errors: {ERROR_COUNT}\r', end='', flush=True)
+
+
 def main():
     """
     Main program function.
     """
+    global TOTAL_COUNT
+
     args = parse_arguments()
     print(BANNER)
 
@@ -256,6 +289,12 @@ def main():
         mutations = read_mutations(args.mutations)
     names = build_names(args.keyword, mutations)
 
+    # Set the total count for progress tracking
+    TOTAL_COUNT = len(names) * 3  # Multiply by 3 for AWS, Azure, and GCP checks
+    
+    # Pass the progress update function to the modules
+    utils.set_progress_callback(update_progress)
+
     # All the work is done in the individual modules
     try:
         if not args.disable_aws:
@@ -265,7 +304,7 @@ def main():
         if not args.disable_gcp:
             gcp_checks.run_all(names, args)
     except KeyboardInterrupt:
-        print("Thanks for playing!")
+        print("\nThanks for playing!")
         sys.exit()
 
     # Best of luck to you!
