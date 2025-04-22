@@ -882,36 +882,6 @@ def check_azure_vms(names, nameserver, threads, nameserverfile=False):
     
     for region in regions:
         # Initialize the list of domain names to look up for this region
-        candidates = [name + '.' + region + '.' + VM_URL
-
-
-def check_azure_vms(names, nameserver, threads, nameserverfile=False):
-    """
-    Checks for Azure Virtual Machines
-    """
-    global CURRENT_COUNT, TOTAL_COUNT, VALID_COUNT, ERROR_COUNT
-    
-    print("[+] Checking for Azure Virtual Machines")
-
-    # Initialize progress counters
-    CURRENT_COUNT = 0
-    VALID_COUNT = 0
-    ERROR_COUNT = 0
-
-    # Start a counter to report on elapsed time
-    start_time = utils.start_timer()
-
-    # Pull the regions from a config file
-    regions = azure_regions.REGIONS
-
-    print(f"[*] Testing across {len(regions)} regions defined in the config file")
-
-    # Calculate total candidates across all regions
-    total_candidates = 0
-    all_candidates = []
-    
-    for region in regions:
-        # Initialize the list of domain names to look up for this region
         candidates = [name + '.' + region + '.' + VM_URL for name in names]
         all_candidates.extend(candidates)
         total_candidates += len(candidates)
