@@ -6,8 +6,6 @@ cloud_enum by initstring (github.com/initstring)
 Multi-cloud OSINT tool designed to enumerate storage and services in AWS,
 Azure, and GCP.
 
-Modified to show percentage-based progress instead of individual entries.
-
 Enjoy!
 """
 
@@ -35,6 +33,26 @@ BANNER = '''
 ##########################
 
 '''
+
+
+def update_progress(current, total, valid=0, error=0):
+    """
+    Update the progress counters and display percentage-based progress
+    """
+    global CURRENT_COUNT, TOTAL_COUNT, VALID_COUNT, ERROR_COUNT
+
+    with PROGRESS_LOCK:
+        CURRENT_COUNT = current
+        TOTAL_COUNT = total
+        VALID_COUNT = valid
+        ERROR_COUNT = error
+
+        if TOTAL_COUNT > 0:  # Avoid division by zero
+            progress_percentage = (CURRENT_COUNT / TOTAL_COUNT) * 100
+            
+            # Only update display every 5% or if it's the last item
+            if progress_percentage % 5 < (1 / TOTAL_COUNT * 100) or CURRENT_COUNT == TOTAL_COUNT:
+                print(f'\r        Progress: {progress_percentage:.1f}% ({CURRENT_COUNT}/{TOTAL_COUNT}), Valid: {VALID_COUNT}, Errors: {ERROR_COUNT}\r', end='', flush=True)
 
 
 def parse_arguments():
@@ -95,6 +113,9 @@ def parse_arguments():
 
     parser.add_argument('-qs', '--quickscan', action='store_true',
                         help='Disable all mutations and second-level scans')
+                        
+    parser.add_argument('--no-color', action='store_true',
+                        help='Disable colored output')
 
     args = parser.parse_args()
 
@@ -140,6 +161,10 @@ def parse_arguments():
             sys.exit()
         # Set the global in the utils file, where logging needs to happen
         utils.init_logfile(args.logfile, args.format)
+        
+    # Set color option
+    if args.no_color and hasattr(utils, 'USE_COLORS'):
+        utils.USE_COLORS = False
 
     return args
 
@@ -232,7 +257,6 @@ def build_names(base_list, mutations):
 
     return names
 
-
 def read_nameservers(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -247,32 +271,10 @@ def read_nameservers(file_path):
         print(e)
         exit(1)
 
-
-def update_progress(current, total, valid=0, error=0):
-    """
-    Update the progress counters and display percentage-based progress
-    """
-    global CURRENT_COUNT, TOTAL_COUNT, VALID_COUNT, ERROR_COUNT
-
-    with PROGRESS_LOCK:
-        CURRENT_COUNT = current
-        TOTAL_COUNT = total
-        VALID_COUNT = valid
-        ERROR_COUNT = error
-
-        progress_percentage = (CURRENT_COUNT / TOTAL_COUNT) * 100
-        
-        # Only update display every 5% or if it's the last item
-        if progress_percentage % 5 < (1 / TOTAL_COUNT * 100) or CURRENT_COUNT == TOTAL_COUNT:
-            print(f'\r        Progress: {progress_percentage:.1f}% ({CURRENT_COUNT}/{TOTAL_COUNT}), Valid: {VALID_COUNT}, Errors: {ERROR_COUNT}\r', end='', flush=True)
-
-
 def main():
     """
     Main program function.
     """
-    global TOTAL_COUNT
-
     args = parse_arguments()
     print(BANNER)
 
@@ -290,6 +292,7 @@ def main():
     names = build_names(args.keyword, mutations)
 
     # Set the total count for progress tracking
+    global TOTAL_COUNT
     TOTAL_COUNT = len(names) * 3  # Multiply by 3 for AWS, Azure, and GCP checks
     
     # Pass the progress update function to the modules
