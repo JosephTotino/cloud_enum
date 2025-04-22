@@ -118,7 +118,11 @@ def parse_arguments():
                         help='Disable colored output')
 
     args = parser.parse_args()
-
+    
+    # Add no color option
+    if args.no_color:
+        utils.USE_COLORS = False
+    
     # Ensure mutations file is readable
     if not os.access(args.mutations, os.R_OK):
         print(f"[!] Cannot access mutations file: {args.mutations}")
@@ -161,10 +165,6 @@ def parse_arguments():
             sys.exit()
         # Set the global in the utils file, where logging needs to happen
         utils.init_logfile(args.logfile, args.format)
-        
-    # Set color option
-    if args.no_color and hasattr(utils, 'USE_COLORS'):
-        utils.USE_COLORS = False
 
     return args
 
