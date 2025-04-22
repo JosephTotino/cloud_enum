@@ -146,64 +146,7 @@ def check_storage_accounts(names, threads, nameserver, nameserverfile=False):
     # As Azure Storage Accounts can contain only letters and numbers,
     # discard those not matching to save time on the DNS lookups.
     regex = re.compile('[^a-zA-Z0-9]')
-    for name in names]
-        all_candidates.extend(candidates)
-        total_candidates += len(candidates)
-    
-    # Set total count for progress tracking
-    TOTAL_COUNT = total_candidates
-    
-    # Show initial progress
-    update_progress(increment_current=False)
-    
-    # Process each region separately
-    for region in regions:
-        # Initialize the list of domain names to look up for this region
-        candidates = [name + '.' + region + '.' + VM_URL for name in names]
-        
-        print(f"\n[*] Checking {len(candidates)} candidates in region {region}")
-
-        # Create a wrapper function to update progress during DNS lookup
-        def dns_callback(name, result):
-            update_progress(increment_current=True)
-            if result:
-                return print_vm_response(name)
-            return False
-
-        # Azure VMs use DNS sub-domains. If it resolves, it is registered.
-        utils.fast_dns_lookup(candidates, nameserver,
-                              nameserverfile,
-                              callback=dns_callback,
-                              threads=threads)
-
-    # Ensure we show 100% at the end
-    update_progress(increment_current=False)
-    print("\n[+] Completed Azure Virtual Machines check")
-    
-    # Stop the timer
-    utils.stop_timer(start_time)
-
-
-def run_all(names, args):
-    """
-    Function is called by main program
-    """
-    print(BANNER)
-
-    valid_accounts = check_storage_accounts(names, args.threads,
-                                            args.nameserver, args.nameserverfile)
-    if valid_accounts and not args.quickscan:
-        brute_force_containers(valid_accounts, args.brute, args.threads)
-
-    check_file_accounts(names, args.threads, args.nameserver, args.nameserverfile)
-    check_queue_accounts(names, args.threads, args.nameserver, args.nameserverfile)
-    check_table_accounts(names, args.threads, args.nameserver, args.nameserverfile)
-    check_mgmt_accounts(names, args.threads, args.nameserver, args.nameserverfile)
-    check_vault_accounts(names, args.threads, args.nameserver, args.nameserverfile)
-
-    check_azure_websites(names, args.nameserver, args.threads, args.nameserverfile)
-    check_azure_databases(names, args.nameserver, args.threads, args.nameserverfile)
-    check_azure_vms(names, args.nameserver, args.threads, args.nameserverfile):
+    for name in names:
         if not re.search(regex, name):
             candidates.append(f'{name}.{BLOB_URL}')
     
@@ -910,6 +853,36 @@ def print_vm_response(hostname):
     update_progress(increment_current=False, increment_valid=True)
     
     return True
+
+
+def check_azure_vms(names, nameserver, threads, nameserverfile=False):
+    """
+    Checks for Azure Virtual Machines
+    """
+    global CURRENT_COUNT, TOTAL_COUNT, VALID_COUNT, ERROR_COUNT
+    
+    print("[+] Checking for Azure Virtual Machines")
+
+    # Initialize progress counters
+    CURRENT_COUNT = 0
+    VALID_COUNT = 0
+    ERROR_COUNT = 0
+
+    # Start a counter to report on elapsed time
+    start_time = utils.start_timer()
+
+    # Pull the regions from a config file
+    regions = azure_regions.REGIONS
+
+    print(f"[*] Testing across {len(regions)} regions defined in the config file")
+
+    # Calculate total candidates across all regions
+    total_candidates = 0
+    all_candidates = []
+    
+    for region in regions:
+        # Initialize the list of domain names to look up for this region
+        candidates = [name + '.' + region + '.' + VM_URL
 
 
 def check_azure_vms(names, nameserver, threads, nameserverfile=False):
