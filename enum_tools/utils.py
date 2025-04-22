@@ -85,6 +85,16 @@ def get_url_batch(url_list, use_ssl=False, callback='', threads=5):
             except requests.exceptions.TooManyRedirects:
                 print("{}: Too many redirects".format(url))
 
+def set_progress_callback(callback):
+    """
+    This function is a no-op in the current implementation.
+    
+    It's here for compatibility with the main cloud_enum.py file,
+    but the progress tracking is handled directly by each module.
+    """
+    # In this implementation, each module handles its own progress
+    # tracking directly, so we don't need to do anything here.
+    pass
 
 def fmt_output(data):
     """
