@@ -13,6 +13,7 @@ import dns.resolver
 # Set the global flag for the output file
 LOGFILE = False
 FORMAT = False
+USE_COLORS = True
 
 def init_logfile(logfile, format_type):
     """
@@ -166,6 +167,11 @@ def printc(text, color=None, bold=False):
     """
     Print with color. Accepts a text string, optional color, and bold flag.
     """
+    # If colors are disabled, just print the text
+    if not USE_COLORS:
+        print(text)
+        return
+        
     # ANSI escape sequences
     green = '\033[92m'
     orange = '\033[33m'
