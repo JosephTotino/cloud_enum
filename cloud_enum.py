@@ -13,18 +13,10 @@ import os
 import sys
 import argparse
 import re
-import threading
 from enum_tools import aws_checks
 from enum_tools import azure_checks
 from enum_tools import gcp_checks
 from enum_tools import utils
-
-# Add global progress tracking variables
-CURRENT_COUNT = 0
-TOTAL_COUNT = 0
-VALID_COUNT = 0
-ERROR_COUNT = 0
-PROGRESS_LOCK = threading.Lock()
 
 BANNER = '''
 ##########################
@@ -33,26 +25,6 @@ BANNER = '''
 ##########################
 
 '''
-
-
-def update_progress(current, total, valid=0, error=0):
-    """
-    Update the progress counters and display percentage-based progress
-    """
-    global CURRENT_COUNT, TOTAL_COUNT, VALID_COUNT, ERROR_COUNT
-
-    with PROGRESS_LOCK:
-        CURRENT_COUNT = current
-        TOTAL_COUNT = total
-        VALID_COUNT = valid
-        ERROR_COUNT = error
-
-        if TOTAL_COUNT > 0:  # Avoid division by zero
-            progress_percentage = (CURRENT_COUNT / TOTAL_COUNT) * 100
-            
-            # Only update display every 25% or if it's the last item
-            if progress_percentage % 25 < (1 / TOTAL_COUNT * 100) or CURRENT_COUNT == TOTAL_COUNT:
-                print(f'\r        Progress: {progress_percentage:.1f}% ({CURRENT_COUNT}/{TOTAL_COUNT}), Valid: {VALID_COUNT}, Errors: {ERROR_COUNT}\r', end='', flush=True)
 
 
 def parse_arguments():
@@ -113,16 +85,9 @@ def parse_arguments():
 
     parser.add_argument('-qs', '--quickscan', action='store_true',
                         help='Disable all mutations and second-level scans')
-                        
-    parser.add_argument('--no-color', action='store_true',
-                        help='Disable colored output')
 
     args = parser.parse_args()
-    
-    # Add no color option
-    if args.no_color:
-        utils.USE_COLORS = False
-    
+
     # Ensure mutations file is readable
     if not os.access(args.mutations, os.R_OK):
         print(f"[!] Cannot access mutations file: {args.mutations}")
@@ -184,16 +149,9 @@ def print_status(args):
 
 def check_windows():
     """
-    Fixes pretty color printing for Windows users. Keeping out of
-    requirements.txt to avoid the library requirement for most users.
+    No need to handle color printing since we're removing ANSI codes
     """
-    if os.name == 'nt':
-        try:
-            import colorama
-            colorama.init()
-        except ModuleNotFoundError:
-            print("[!] Yo, Windows user - if you want pretty colors, you can"
-                  " install the colorama python package.")
+    pass
 
 
 def read_mutations(mutations_file):
@@ -253,8 +211,8 @@ def build_names(base_list, mutations):
             append_name(f"{mutation}.{base}", names)
             append_name(f"{mutation}-{base}", names)
 
-    print(f"[+] Mutated results: {len(names)} items")
-
+    # Removed the output of mutation results count
+    # Just return the names list
     return names
 
 def read_nameservers(file_path):
@@ -281,8 +239,7 @@ def main():
     # Generate a basic status on targets and parameters
     print_status(args)
 
-    # Give our Windows friends a chance at pretty colors
-    check_windows()
+    # No need to check Windows for color codes since we're removing them
 
     # First, build a sorted base list of target names
     if args.quickscan:
@@ -290,13 +247,6 @@ def main():
     else:
         mutations = read_mutations(args.mutations)
     names = build_names(args.keyword, mutations)
-
-    # Set the total count for progress tracking
-    global TOTAL_COUNT
-    TOTAL_COUNT = len(names) * 3  # Multiply by 3 for AWS, Azure, and GCP checks
-    
-    # Pass the progress update function to the modules
-    utils.set_progress_callback(update_progress)
 
     # All the work is done in the individual modules
     try:
@@ -307,7 +257,7 @@ def main():
         if not args.disable_gcp:
             gcp_checks.run_all(names, args)
     except KeyboardInterrupt:
-        print("\nThanks for playing!")
+        print("Thanks for playing!")
         sys.exit()
 
     # Best of luck to you!
