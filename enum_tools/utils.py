@@ -13,7 +13,7 @@ import dns.resolver
 # Set the global flag for the output file
 LOGFILE = False
 FORMAT = False
-USE_COLORS = True
+USE_COLORS = False
 
 def init_logfile(logfile, format_type):
     """
