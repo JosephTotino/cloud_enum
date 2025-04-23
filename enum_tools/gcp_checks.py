@@ -49,8 +49,8 @@ def update_progress(increment_current=True, increment_valid=False, increment_err
         if TOTAL_COUNT > 0:  # Avoid division by zero
             progress_percentage = (CURRENT_COUNT / TOTAL_COUNT) * 100
             
-            # Only update display every 5% or if it's the last item
-            if progress_percentage % 5 < (1 / TOTAL_COUNT * 100) or CURRENT_COUNT == TOTAL_COUNT:
+            # Only update display every 25% or if it's the last item
+            if progress_percentage % 25 < (1 / TOTAL_COUNT * 100) or CURRENT_COUNT == TOTAL_COUNT:
                 print(f'\r        Progress: {progress_percentage:.1f}% ({CURRENT_COUNT}/{TOTAL_COUNT}), Valid: {VALID_COUNT}, Errors: {ERROR_COUNT}\r', end='', flush=True)
 
 
