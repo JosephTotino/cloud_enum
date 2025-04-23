@@ -138,9 +138,21 @@ def run_all(names, args):
     Function is called by main program
     """
     print(BANNER)
+    sys.stdout.flush()
+
+    # Print a guaranteed output line for debugging
+    print("[+] AWS checks starting with keyword: " + ', '.join(args.keyword))
+    sys.stdout.flush()
 
     # Use user-supplied AWS region if provided
     # if not regions:
     #    regions = AWS_REGIONS
     check_s3_buckets(names, args.threads)
+    sys.stdout.flush()
+    
     check_awsapps(names, args.threads, args.nameserver, args.nameserverfile)
+    sys.stdout.flush()
+    
+    # Print an ending line
+    print("[+] AWS checks completed")
+    sys.stdout.flush()
