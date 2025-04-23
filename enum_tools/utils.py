@@ -42,6 +42,26 @@ def init_logfile(logfile, fmt):
         with open(logfile, 'a', encoding='utf-8') as log_writer:
             log_writer.write(f"\n\n#### CLOUD_ENUM {now} ####\n")
 
+def fmt_output(data):
+    """
+    Handles the output - printing and logging based on a specified format
+    """
+    # Remove all ANSI color codes and just print plain text
+    output_line = f"  {data['msg']}: {data['target']}\n"
+    sys.stdout.write(output_line)
+    # Force flush stdout to ensure output is captured immediately
+    sys.stdout.flush()
+
+    if LOGFILE:
+        with open(LOGFILE, 'a', encoding='utf-8') as log_writer:
+            if LOGFILE_FMT == 'text':
+                log_writer.write(f'{data["msg"]}: {data["target"]}\n')
+            if LOGFILE_FMT == 'csv':
+                writer = csv.DictWriter(log_writer, data.keys())
+                writer.writerow(data)
+            if LOGFILE_FMT == 'json':
+                log_writer.write(json.dumps(data) + '\n')
+
 
 def is_valid_domain(domain):
     """
