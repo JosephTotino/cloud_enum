@@ -3,6 +3,7 @@ Google-specific checks. Part of the cloud_enum package available at
 github.com/initstring/cloud_enum
 """
 
+import sys
 from enum_tools import utils
 from enum_tools import gcp_regions
 
@@ -48,7 +49,8 @@ def print_bucket_response(reply):
         utils.fmt_output(data)
     else:
         print(f"    Unknown status codes being received from {reply.url}:\n"
-              "       {reply.status_code}: {reply.reason}")
+              f"       {reply.status_code}: {reply.reason}")
+        sys.stdout.flush()
 
 
 def check_gcp_buckets(names, threads):
@@ -56,6 +58,7 @@ def check_gcp_buckets(names, threads):
     Checks for open and restricted Google Cloud buckets
     """
     print("[+] Checking for Google buckets")
+    sys.stdout.flush()
 
     # Start a counter to report on elapsed time
     start_time = utils.start_timer()
@@ -109,7 +112,8 @@ def print_fbrtdb_response(reply):
         utils.fmt_output(data)
     else:
         print(f"    Unknown status codes being received from {reply.url}:\n"
-              "       {reply.status_code}: {reply.reason}")
+              f"       {reply.status_code}: {reply.reason}")
+        sys.stdout.flush()
 
 
 def check_fbrtdb(names, threads):
@@ -117,6 +121,7 @@ def check_fbrtdb(names, threads):
     Checks for Google Firebase RTDB
     """
     print("[+] Checking for Google Firebase Realtime Databases")
+    sys.stdout.flush()
 
     # Start a counter to report on elapsed time
     start_time = utils.start_timer()
@@ -159,13 +164,15 @@ def print_fbapp_response(reply):
         utils.fmt_output(data)
     else:
         print(f"    Unknown status codes being received from {reply.url}:\n"
-              "       {reply.status_code}: {reply.reason}")
+              f"       {reply.status_code}: {reply.reason}")
+        sys.stdout.flush()
 
 def check_fbapp(names, threads):
     """
     Checks for Google Firebase Applications
     """
     print("[+] Checking for Google Firebase Applications")
+    sys.stdout.flush()
 
     # Start a counter to report on elapsed time
     start_time = utils.start_timer()
@@ -218,7 +225,8 @@ def print_appspot_response(reply):
             utils.fmt_output(data)
     else:
         print(f"    Unknown status codes being received from {reply.url}:\n"
-              "       {reply.status_code}: {reply.reason}")
+              f"       {reply.status_code}: {reply.reason}")
+        sys.stdout.flush()
 
 
 def check_appspot(names, threads):
@@ -226,6 +234,7 @@ def check_appspot(names, threads):
     Checks for Google App Engine sites running on appspot.com
     """
     print("[+] Checking for Google App Engine apps")
+    sys.stdout.flush()
 
     # Start a counter to report on elapsed time
     start_time = utils.start_timer()
@@ -268,7 +277,8 @@ def print_functions_response1(reply):
         HAS_FUNCS.append(reply.url)
     else:
         print(f"    Unknown status codes being received from {reply.url}:\n"
-              "       {reply.status_code}: {reply.reason}")
+              f"       {reply.status_code}: {reply.reason}")
+        sys.stdout.flush()
 
 
 def print_functions_response2(reply):
@@ -299,7 +309,8 @@ def print_functions_response2(reply):
         utils.fmt_output(data)
     else:
         print(f"    Unknown status codes being received from {reply.url}:\n"
-              "       {reply.status_code}: {reply.reason}")
+              f"       {reply.status_code}: {reply.reason}")
+        sys.stdout.flush()
 
 
 def check_functions(names, brute_list, quickscan, threads):
@@ -318,6 +329,7 @@ def check_functions(names, brute_list, quickscan, threads):
     defaults to only 1 region, so you should really modify it for best results.
     """
     print("[+] Checking for project/zones with Google Cloud Functions.")
+    sys.stdout.flush()
 
     # Start a counter to report on elapsed time
     start_time = utils.start_timer()
@@ -329,6 +341,7 @@ def check_functions(names, brute_list, quickscan, threads):
     regions = gcp_regions.REGIONS
 
     print(f"[*] Testing across {len(regions)} regions defined in the config file")
+    sys.stdout.flush()
 
     # Take each mutated keyword craft a url with the correct format
     for region in regions:
@@ -340,7 +353,7 @@ def check_functions(names, brute_list, quickscan, threads):
                         threads=threads,
                         redir=False)
 
-    # Retun from function if we have not found any valid combos
+    # Return from function if we have not found any valid combos
     if not HAS_FUNCS:
         utils.stop_timer(start_time)
         return
@@ -352,6 +365,7 @@ def check_functions(names, brute_list, quickscan, threads):
     # If we did find something, we'll use the brute list. This will allow people
     # to provide a separate fuzzing list if they choose.
     print(f"[*] Brute-forcing function names in {len(HAS_FUNCS)} project/region combos")
+    sys.stdout.flush()
 
     # Load brute list in memory, based on allowed chars/etc
     brute_strings = utils.get_brute(brute_list)
@@ -360,6 +374,8 @@ def check_functions(names, brute_list, quickscan, threads):
     # project/region combos that we know have existing functions defined
     for func in HAS_FUNCS:
         print(f"[*] Brute-forcing {len(brute_strings)} function names in {func}")
+        sys.stdout.flush()
+        
         # Initialize the list of initial URLs to check. Strip out the HTTP
         # protocol first, as that is handled in the utility
         func = func.replace("http://", "")
@@ -383,9 +399,27 @@ def run_all(names, args):
     Function is called by main program
     """
     print(BANNER)
+    sys.stdout.flush()
+
+    # Print a guaranteed output line for debugging
+    print("[+] GCP checks starting with keyword: " + ', '.join(args.keyword))
+    sys.stdout.flush()
 
     check_gcp_buckets(names, args.threads)
+    sys.stdout.flush()
+    
     check_fbrtdb(names, args.threads)
+    sys.stdout.flush()
+    
     check_appspot(names, args.threads)
+    sys.stdout.flush()
+    
     check_functions(names, args.brute, args.quickscan, args.threads)
+    sys.stdout.flush()
+    
     check_fbapp(names, args.threads)
+    sys.stdout.flush()
+    
+    # Print an ending line
+    print("[+] GCP checks completed")
+    sys.stdout.flush()
