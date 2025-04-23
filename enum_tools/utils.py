@@ -97,6 +97,28 @@ def set_progress_callback(callback):
     # tracking directly, so we don't need to do anything here.
     pass
 
+def get_brute(brute_file, mini=0):
+    """
+    Read brute force file into memory for processing.
+    Can filter results based on minimum string length.
+    """
+    clean_names = []
+    
+    try:
+        with open(brute_file, encoding="utf8", errors="ignore") as infile:
+            brute_list = infile.read().splitlines()
+            
+        # Clean up the names and enforce minimum length if specified
+        for name in brute_list:
+            name = name.strip().lower()
+            if len(name) >= mini:
+                clean_names.append(name)
+                
+        return clean_names
+    except Exception as e:
+        print(f"Error reading brute force file: {e}")
+        return []
+        
 def fmt_output(data):
     """
     Standardizes output formatting.
