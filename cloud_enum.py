@@ -235,34 +235,55 @@ def main():
     """
     args = parse_arguments()
     print(BANNER)
+    sys.stdout.flush()
 
     # Generate a basic status on targets and parameters
     print_status(args)
-
-    # No need to check Windows for color codes since we're removing them
+    sys.stdout.flush()
 
     # First, build a sorted base list of target names
     if args.quickscan:
         mutations = []
     else:
         mutations = read_mutations(args.mutations)
+        sys.stdout.flush()
+    
     names = build_names(args.keyword, mutations)
+    
+    # Print total number of names for debugging
+    print(f"[+] Total mutation results: {len(names)} items")
+    sys.stdout.flush()
 
     # All the work is done in the individual modules
     try:
         if not args.disable_aws:
+            print("[+] Running AWS checks...")
+            sys.stdout.flush()
             aws_checks.run_all(names, args)
+            sys.stdout.flush()
         if not args.disable_azure:
+            print("[+] Running Azure checks...")
+            sys.stdout.flush()
             azure_checks.run_all(names, args)
+            sys.stdout.flush()
         if not args.disable_gcp:
+            print("[+] Running GCP checks...")
+            sys.stdout.flush()
             gcp_checks.run_all(names, args)
+            sys.stdout.flush()
     except KeyboardInterrupt:
         print("Thanks for playing!")
+        sys.stdout.flush()
         sys.exit()
+    except Exception as e:
+        print(f"[!] Error during execution: {str(e)}")
+        sys.stdout.flush()
+        sys.exit(1)
 
     # Best of luck to you!
     print("\n[+] All done, happy hacking!\n")
-    sys.exit()
+    sys.stdout.flush()
+    sys.exit(0)
 
 
 if __name__ == '__main__':
