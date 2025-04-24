@@ -3,6 +3,7 @@ AWS-specific checks. Part of the cloud_enum package available at
 github.com/initstring/cloud_enum
 """
 
+import sys
 from enum_tools import utils
 
 BANNER = '''
@@ -65,10 +66,12 @@ def print_s3_response(reply):
         utils.fmt_output(data)
     elif 'Slow Down' in reply.reason:
         print("[!] You've been rate limited, skipping rest of check...")
+        sys.stdout.flush()
         return 'breakout'
     else:
         print(f"    Unknown status codes being received from {reply.url}:\n"
-              "       {reply.status_code}: {reply.reason}")
+              f"       {reply.status_code}: {reply.reason}")
+        sys.stdout.flush()
 
     return None
 
@@ -78,6 +81,7 @@ def check_s3_buckets(names, threads):
     Checks for open and restricted Amazon S3 buckets
     """
     print("[+] Checking for S3 buckets")
+    sys.stdout.flush()
 
     # Start a counter to report on elapsed time
     start_time = utils.start_timer()
@@ -106,6 +110,7 @@ def check_awsapps(names, threads, nameserver, nameserverfile=False):
     data = {'platform': 'aws', 'msg': 'AWS App Found:', 'target': '', 'access': ''}
 
     print("[+] Checking for AWS Apps")
+    sys.stdout.flush()
 
     # Start a counter to report on elapsed time
     start_time = utils.start_timer()
